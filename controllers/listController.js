@@ -5,9 +5,11 @@ import TaskCard from '../models/TaskCard.js';
 
 const getLists = async (req = request, res = response) => {
 	const { idProject } = req.params;
+
 	const project = await Project.findById(idProject)
 		.populate({ path: 'collaborators', select: '-confirm -createdAt -token -updatedAt -__v -password' })
 		.select('-lists');
+
 	const lists = await List.find()
 		.where('project')
 		.equals(idProject)

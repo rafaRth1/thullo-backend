@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { request, response } from 'express';
 import List from '../models/List.js';
 import Comment from '../models/Comment.js';
@@ -118,4 +119,33 @@ const deleteComment = async (req = request, res = response) => {
 	}
 };
 
-export { createTaskCard, updateCard, deleteCard, getCardsToIds, createComment, editComment, deleteComment };
+const updateTaskCardToList = async (req = request, res = response) => {
+	const { id } = req.params;
+	const { result } = req.body;
+	const list = await List.findById(id);
+
+	const newTaskCards = result.map((items) => {
+		return new mongoose.Types.ObjectId(items._id);
+	});
+
+	list.taskCards = newTaskCards || list.taskCards;
+
+	try {
+		const listStore = await list.save();
+		await listStore.populate('taskCards');
+		res.json(listStore);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+export {
+	createTaskCard,
+	updateCard,
+	deleteCard,
+	getCardsToIds,
+	createComment,
+	editComment,
+	deleteComment,
+	updateTaskCardToList,
+};

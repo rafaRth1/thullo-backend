@@ -22,6 +22,10 @@ const TaskCardSchema = mongoose.Schema({
 		ref: 'List',
 	},
 
+	index: {
+		type: String,
+	},
+
 	comments: [
 		{
 			type: mongoose.Schema.Types.ObjectId,

@@ -8,12 +8,14 @@ import {
 	deleteComment,
 	getCardsToIds,
 	updateCard,
+	updateTaskCardToList,
 } from '../controllers/taskCardController.js';
 
 const router = express.Router();
 
 router.post('/', createTaskCard);
 router.route('/:id').get(getCardsToIds).put(updateCard).delete(deleteCard);
+router.put('/order-tasks/:id', updateTaskCardToList);
 
 // Comments
 
