@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { request, response } from 'express';
 import List from '../models/List.js';
 import Project from '../models/Project.js';
@@ -92,20 +93,17 @@ const deleteList = async (req = request, res = response) => {
 const addCardIdToList = async (req = request, res = response) => {
 	const { idCard } = req.params;
 	const { listIdNext, listIdPrev } = req.body;
+	const card = await TaskCard.findById(idCard);
 	const listPrev = await List.findById(listIdPrev);
 	const listNext = await List.findById(listIdNext);
-	const card = await TaskCard.findById(idCard);
 
-	const listUpdatePrev = listPrev.taskCards.filter((task) => task.toString() !== idCard);
-	listPrev.taskCards = listUpdatePrev;
+	listPrev.taskCards.pull(card._id);
+	listNext.taskCards.push(card._id);
 
 	card.list = listIdNext;
-	listNext.taskCards.push(idCard);
 
 	try {
-		listPrev.save();
-		listNext.save();
-		card.save();
+		await Promise.allSettled([await listPrev.save(), await listNext.save(), await card.save()]);
 
 		res.json('Cambio');
 	} catch (error) {
@@ -113,4 +111,22 @@ const addCardIdToList = async (req = request, res = response) => {
 	}
 };
 
-export { createNewList, getLists, editList, deleteList, addCardIdToList };
+const udpateCardToList = async (req = request, res = response) => {
+	const { id } = req.params;
+	const { taskCards } = req.body;
+	const list = await List.findById(id);
+
+	const newTaskCards = taskCards.map((items) => {
+		return new mongoose.Types.ObjectId(items._id);
+	});
+
+	list.taskCards = newTaskCards;
+
+	try {
+		await list.save();
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+export { createNewList, getLists, editList, deleteList, addCardIdToList, udpateCardToList };
