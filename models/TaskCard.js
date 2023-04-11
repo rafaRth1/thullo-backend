@@ -32,8 +32,21 @@ const TaskCardSchema = mongoose.Schema({
 			ref: 'Comment',
 		},
 	],
+
+	members: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'User',
+		},
+	],
+	labels: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Label',
+		},
+	],
+
 	attachments: [],
-	labels: [],
 });
 
 const TaskCard = mongoose.model('TaskCard', TaskCardSchema);

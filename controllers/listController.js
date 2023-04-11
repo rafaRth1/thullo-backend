@@ -7,20 +7,15 @@ import TaskCard from '../models/TaskCard.js';
 const getLists = async (req = request, res = response) => {
 	const { idProject } = req.params;
 
-	const project = await Project.findById(idProject)
-		.populate({ path: 'collaborators', select: '-confirm -createdAt -token -updatedAt -__v -password' })
-		.select('-lists');
-
 	const lists = await List.find()
 		.where('project')
 		.equals(idProject)
-		.populate({ path: 'taskCards', populate: { path: 'comments' } });
+		.select('-createdAt -updatedAt -__v -project')
+		.populate({ path: 'taskCards', populate: { path: 'comments' } })
+		.populate({ path: 'taskCards', populate: { path: 'members', select: '_id name colorImg img' } })
+		.populate({ path: 'taskCards', populate: { path: 'labels' } });
 
-	res.json({
-		project,
-		lists,
-		length: lists.length,
-	});
+	res.json(lists);
 };
 
 const createNewList = async (req = request, res = response) => {
@@ -48,7 +43,11 @@ const createNewList = async (req = request, res = response) => {
 
 const editList = async (req = request, res = response) => {
 	const { id } = req.params;
-	const list = await List.findById(id).populate('project');
+	const list = await List.findById(id)
+		.select('-createdAt -updatedAt -__v')
+		.populate({ path: 'project', select: 'creator' });
+
+	//
 
 	if (!list) {
 		const error = new Error('No encontrado');
@@ -63,8 +62,12 @@ const editList = async (req = request, res = response) => {
 	list.name = req.body.name || list.name;
 
 	try {
-		await list.save();
-		res.json({ msg: 'Lista Actualizada' });
+		const listUdpate = await list.save();
+
+		res.json({
+			_id: listUdpate._id,
+			name: listUdpate.name,
+		});
 	} catch (error) {
 		console.log(error);
 	}
@@ -112,18 +115,19 @@ const addCardIdToList = async (req = request, res = response) => {
 };
 
 const udpateCardToList = async (req = request, res = response) => {
-	const { id } = req.params;
-	const { taskCards } = req.body;
-	const list = await List.findById(id);
+	const { taskCards, _idTaskCard } = req.body;
+	const list = await List.findById(req.params.id);
+	const card = await TaskCard.findById(_idTaskCard);
 
 	const newTaskCards = taskCards.map((items) => {
 		return new mongoose.Types.ObjectId(items._id);
 	});
 
+	card.list = list._id;
 	list.taskCards = newTaskCards;
 
 	try {
-		await list.save();
+		await Promise.allSettled([await list.save(), await card.save()]);
 	} catch (error) {
 		console.log(error);
 	}

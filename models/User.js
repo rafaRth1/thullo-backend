@@ -22,10 +22,14 @@ const UserSchema = mongoose.Schema(
 			unique: true,
 		},
 
-		// img: {
-		// 	type: String,
-		// 	trim: true,
-		// },
+		img: {
+			type: String,
+			trim: true,
+		},
+
+		colorImg: {
+			type: String,
+		},
 
 		token: {
 			type: String,

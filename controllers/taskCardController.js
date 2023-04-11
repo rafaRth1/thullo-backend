@@ -1,8 +1,11 @@
 import mongoose from 'mongoose';
 import { request, response } from 'express';
+import Project from '../models/Project.js';
 import List from '../models/List.js';
 import Comment from '../models/Comment.js';
 import TaskCard from '../models/TaskCard.js';
+import User from '../models/User.js';
+import Label from '../models/Label.js';
 
 const createTaskCard = async (req = request, res = response) => {
 	const { list } = req.body;
@@ -27,20 +30,15 @@ const createTaskCard = async (req = request, res = response) => {
 
 const updateCard = async (req = request, res = response) => {
 	const { id } = req.params;
-	const task = await TaskCard.findById(id).populate('comments');
+	const task = await TaskCard.findById(id).select('nameCard imgUlr description');
 
 	task.nameCard = req.body.nameCard || task.nameCard;
-	task.imgUlr = req.body.imgUlr || task.imgUlr;
+	task.imgUlr = req.body.imgUlr;
 	task.description = req.body.description || task.description;
-	// task.comments = req.body.comments || task.comments;
-	task.attachments = req.body.attachments || task.attachments;
-	task.labels = req.body.labels || task.labels;
-	task.list = req.body.list || task.list;
 
 	try {
-		const taskStore = await task.save();
-		await taskStore.populate('comments');
-		res.json(taskStore);
+		const taskCardStore = await task.save();
+		res.json(taskCardStore);
 	} catch (error) {
 		console.log(error);
 	}
@@ -67,11 +65,19 @@ const getCardsToIds = async (req = request, res = response) => {
 	res.json(lists);
 };
 
+// Name Card
+// const editNameCard = async (req = request, res = response) => {
+// 	const { id } = req.params;
+// 	const  taskCard = await TaskCard.findById(id);
+
+// 	taskCard.
+// }
+
 // Comments
 
 const createComment = async (req = request, res = response) => {
 	const { taskCard } = req.body;
-	const existingTaskCard = await TaskCard.findById(taskCard).populate('comments');
+	const existingTaskCard = await TaskCard.findById(taskCard);
 
 	if (!existingTaskCard) {
 		const error = new Error('No encontrado');
@@ -83,7 +89,7 @@ const createComment = async (req = request, res = response) => {
 		existingTaskCard.comments.push(commentStore._id);
 		await existingTaskCard.save();
 
-		res.json({ commentStore, taskCard: existingTaskCard });
+		res.json(commentStore);
 	} catch (error) {
 		console.log(error);
 	}
@@ -113,27 +119,97 @@ const deleteComment = async (req = request, res = response) => {
 		taskCard.comments.pull(id);
 		await Promise.allSettled([await taskCard.save(), await comment.delete()]);
 
-		res.json(taskCard);
+		res.json({ msg: 'TaskCard Eliminado' });
 	} catch (error) {
 		console.log(error);
 	}
 };
 
-const updateTaskCardToList = async (req = request, res = response) => {
-	const { id } = req.params;
-	const { result } = req.body;
-	const list = await List.findById(id);
+// Members
 
-	const newTaskCards = result.map((items) => {
-		return new mongoose.Types.ObjectId(items._id);
+const findMemberToTaskCard = async (req = request, res = response) => {
+	// const { email, projectId } = req.body;
+	// const user = await User.findOne({ email }).select('_id name colorImg');
+	// const project = await Project.findById(projectId);
+	// if (!user) {
+	// 	const error = new Error('User not found');
+	// 	return res.status(404).json({ msg: error.message });
+	// }
+	// if (project.collaborators.includes(email._id)) {
+	// 	const error = new Error('User not found in Project');
+	// 	return res.status(404).json({ msg: error.message });
+	// }
+	// const taskCard = await TaskCard.findById(req.params.id);
+	// taskCard.members.push(email._id);
+	// try {
+	// 	const taskCardStore = await taskCard.save();
+	// 	await taskCardStore.populate({ path: 'members', select: '_id name colorImg' });
+	// 	res.json(taskCardStore.members);
+	// } catch (error) {
+	// 	console.log(error);
+	// }
+};
+
+const findMemberInTaskcard = async (req = request, res = response) => {
+	const { idProject } = req.params;
+	const project = await Project.findById(idProject).populate({
+		path: 'collaborators',
+		select: '_id name colorImg',
 	});
 
-	list.taskCards = newTaskCards || list.taskCards;
+	try {
+		res.json(project.collaborators);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+const assignMemberToTaskCard = async (req = request, res = response) => {
+	const { id } = req.params;
+	const taskCard = await TaskCard.findById(id);
+
+	req.body.members.map((member) => {
+		if (taskCard.members.includes(member._id)) {
+			return;
+		} else {
+			taskCard.members.push(member._id);
+		}
+	});
 
 	try {
-		const listStore = await list.save();
-		await listStore.populate('taskCards');
-		res.json(listStore);
+		const taskCardStore = await taskCard.save();
+		await taskCardStore.populate({ path: 'members', select: '_id name colorImg' });
+		res.json(taskCardStore.members);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+// Labels
+
+const createLabeltoTaskCard = async (req = request, res = response) => {
+	const taskCard = await TaskCard.findById(req.params.id);
+	const label = await Label.create(req.body);
+
+	taskCard.labels.push(label._id);
+
+	try {
+		await taskCard.save();
+		res.json(label);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+const deleteLabelToTaskCard = async (req = request, res = response) => {
+	const taskCard = await TaskCard.findById(req.params.id);
+	const label = await Label.findById(req.body.idLabel);
+
+	taskCard.labels.pull(req.body.idLabel);
+
+	try {
+		await Promise.allSettled([await taskCard.save(), label.deleteOne()]);
+		res.json({ msg: 'Label eliminado' });
 	} catch (error) {
 		console.log(error);
 	}
@@ -147,5 +223,9 @@ export {
 	createComment,
 	editComment,
 	deleteComment,
-	updateTaskCardToList,
+	findMemberInTaskcard,
+	assignMemberToTaskCard,
+	findMemberToTaskCard,
+	createLabeltoTaskCard,
+	deleteLabelToTaskCard,
 };

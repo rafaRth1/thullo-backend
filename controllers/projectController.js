@@ -1,10 +1,13 @@
 import { request, response } from 'express';
 import Project from '../models/Project.js';
-import List from '../models/List.js';
 import User from '../models/User.js';
 
 const getProjects = async (req = request, res = response) => {
-	const projects = await Project.find().where('creator').equals(req.user._id).populate('collaborators');
+	const projects = await Project.find()
+		.where('creator')
+		.equals(req.user._id)
+		.select('-createdAt -updatedAt -__v')
+		.populate({ path: 'collaborators', select: '_id name email colorImg img' });
 	res.json(projects);
 };
 
@@ -22,7 +25,10 @@ const createNewProject = async (req = request, res = response) => {
 
 const getProject = async (req = request, res = response) => {
 	const { id } = req.params;
-	const project = await Project.findById(id);
+	const project = await Project.findById(id).select('-createdAt -updatedAt -lists').populate({
+		path: 'collaborators',
+		select: '_id name colorImg img',
+	});
 
 	if (!project) {
 		const error = new Error('No encontrado');
@@ -35,13 +41,6 @@ const getProject = async (req = request, res = response) => {
 	}
 
 	res.json(project);
-
-	// Get task from project
-	// const tasks = await Taks.find().where('project').equals(project._id);
-	// res.json({
-	// 	project,
-	// 	tasks,
-	// });
 };
 
 const editProject = async (req = request, res = response) => {
@@ -144,7 +143,7 @@ const addCollaborator = async (req = request, res = response) => {
 	}
 
 	project.collaborators.push(user._id);
-	await project.populate('collaborators', 'name _id email');
+	await project.populate('collaborators', 'name _id email colorImg');
 	await project.save();
 	res.json(project);
 };
