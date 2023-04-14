@@ -43,6 +43,10 @@ app.use('/projects', projectRoutes);
 app.use('/list', listRoutes);
 app.use('/taskCard', taskCardRoutes);
 
+app.get('*', (req, res) => {
+	res.sendFile(__dirname + '/public/index.html');
+});
+
 app.listen(PORT, () => {
 	console.log(`servidor corriendo en el puerto ${PORT}`);
 });
