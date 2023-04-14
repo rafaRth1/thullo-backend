@@ -29,6 +29,12 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Directorio Publico
+app.use(express.static('public'));
+
+// Lectura y parseo del body
+app.use(express.json());
+
 // Puerto 3.
 const PORT = process.env.PORT || 4000;
 
