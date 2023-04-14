@@ -15,7 +15,7 @@ app.use(express.json());
 connectDB();
 
 // Config Cors
-const whitelist = ['http://localhost:5173', 'https://trullo-thello-clone-rafarth1.netlify.app'];
+const whitelist = [process.env.FRONTEND_URL];
 
 const corsOptions = {
 	origin: function (origin, callback) {
