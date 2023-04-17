@@ -8,6 +8,8 @@ import {
 	findCollaborator,
 	addCollaborator,
 	deleteCollaborator,
+	handleUploadImage,
+	handleDestroyImage,
 } from '../controllers/projectController.js';
 import checkAuth from '../middleware/checkAuth.js';
 
@@ -22,5 +24,9 @@ router.route('/collaborator/:id').post(checkAuth, addCollaborator);
 router.post('/delete-collaborator/:id', checkAuth, deleteCollaborator);
 // Route Project Task Children
 // router.route('/task').post(checkAuth, createNewTaskCard);
+
+// Route Image
+router.post('/image', handleUploadImage);
+router.post('/image-delete', handleDestroyImage);
 
 export default router;

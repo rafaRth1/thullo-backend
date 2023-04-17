@@ -1,11 +1,13 @@
+import cloudinary from 'cloudinary';
 import { request, response } from 'express';
 import Project from '../models/Project.js';
 import User from '../models/User.js';
+import Image from '../models/Image.js';
 
 const getProjects = async (req = request, res = response) => {
-	const projects = await Project.find()
-		.where('creator')
-		.equals(req.user._id)
+	const projects = await Project.find({
+		$or: [{ collaborators: { $in: req.user } }, { creator: { $in: req.user } }],
+	})
 		.select('-createdAt -updatedAt -__v')
 		.populate({ path: 'collaborators', select: '_id name email colorImg img' });
 	res.json(projects);
@@ -35,7 +37,10 @@ const getProject = async (req = request, res = response) => {
 		return res.status(404).json({ msg: error.message });
 	}
 
-	if (project.creator.toString() !== req.user._id.toString()) {
+	if (
+		project.creator.toString() !== req.user._id.toString() &&
+		!project.collaborators.some((collaborator) => collaborator._id.toString() === req.user._id.toString())
+	) {
 		const error = new Error('Acción no valida');
 		return res.status(404).json({ msg: error.message });
 	}
@@ -166,6 +171,27 @@ const deleteCollaborator = async (req = request, res = response) => {
 	res.json({ msg: 'Colaborador Eliminado' });
 };
 
+// Image
+
+const handleUploadImage = async (req = request, res = response) => {
+	const image = await Image.create(req.body);
+	res.json(image);
+};
+
+const handleDestroyImage = async (req = request, res = response) => {
+	cloudinary.v2.config({
+		cloud_name: 'dork20pxe',
+		api_key: '661776166657691',
+		api_secret: 'wrO7LyqXmxOPk2IH0sMXAphgtKk',
+	});
+
+	try {
+		await cloudinary.v2.uploader.destroy(req.body.public_id).then((result) => res.json(result));
+	} catch (error) {
+		console.log(error);
+	}
+};
+
 export {
 	createNewProject,
 	getProjects,
@@ -175,4 +201,6 @@ export {
 	addCollaborator,
 	findCollaborator,
 	deleteCollaborator,
+	handleUploadImage,
+	handleDestroyImage,
 };

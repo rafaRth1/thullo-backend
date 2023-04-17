@@ -58,8 +58,9 @@ const authenticateUser = async (req = request, res = response) => {
 	if (await user.checkPassword(password)) {
 		res.json({
 			_id: user._id,
-			nombre: user.nombre,
+			name: user.name,
 			email: user.email,
+			colorImg: user.colorImg,
 			token: generateJWT(user._id),
 		});
 	} else {
