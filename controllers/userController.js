@@ -15,15 +15,16 @@ const registerUser = async (req = request, res = response) => {
 
 	try {
 		const user = new User(req.body);
-		user.token = generateID();
+		// user.token = generateID();
+		user.confirm = true;
 		await user.save();
 
 		// Send Email confirm
-		emailRegister({
-			email: user.email,
-			name: user.name,
-			token: user.token,
-		});
+		// emailRegister({
+		// 	email: user.email,
+		// 	name: user.name,
+		// 	token: user.token,
+		// });
 
 		res.json({ msg: 'Usuario creado correctamente, revisa tu email para confirmar' });
 	} catch (error) {
@@ -41,6 +42,8 @@ const authenticateUser = async (req = request, res = response) => {
 	// Comprobar si el usuario existe
 	const user = await User.findOne({ email: email });
 
+	console.log(user);
+
 	if (!user) {
 		const error = new Error('User not existent');
 		res.status(404).json({ msg: error.message });
@@ -48,10 +51,10 @@ const authenticateUser = async (req = request, res = response) => {
 
 	// Comprobar si el usuario esta confirmado
 
-	if (!user.confirm) {
-		const error = new Error('Your account has not been confirmed');
-		res.status(403).json({ msg: error.message });
-	}
+	// if (!user.confirm) {
+	// 	const error = new Error('Your account has not been confirmed');
+	// 	res.status(403).json({ msg: error.message });
+	// }
 
 	// Comprobar su password
 
