@@ -6,6 +6,10 @@ const CommentSchema = mongoose.Schema(
 			type: String,
 		},
 
+		colorImg: {
+			type: String,
+		},
+
 		comment: {
 			type: String,
 			trim: true,
