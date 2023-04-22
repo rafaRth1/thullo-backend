@@ -2,6 +2,10 @@ import mongoose from 'mongoose';
 
 const CommentSchema = mongoose.Schema(
 	{
+		author: {
+			type: String,
+		},
+
 		name: {
 			type: String,
 		},
