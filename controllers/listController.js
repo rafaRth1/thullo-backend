@@ -18,9 +18,8 @@ const getLists = async (req = request, res = response) => {
 	res.json(lists);
 };
 
-const createNewList = async (req = request, res = response) => {
+const createList = async (req = request, res = response) => {
 	const { project } = req.body;
-
 	const existingProject = await Project.findById(project);
 
 	if (!existingProject) {
@@ -33,9 +32,15 @@ const createNewList = async (req = request, res = response) => {
 		return res.status(403).json({ msg: error.message });
 	}
 
+	const list = await List.create(req.body);
+
 	try {
-		const listStore = await List.create(req.body);
-		res.json(listStore);
+		res.json({
+			_id: list._id,
+			name: list.name,
+			taskCards: list.taskCards,
+			project: list.project,
+		});
 	} catch (error) {
 		console.log(error);
 	}
@@ -85,6 +90,7 @@ const deleteList = async (req = request, res = response) => {
 		const error = new Error('Acción no valida');
 		return res.status(401).json({ msg: error.message });
 	}
+
 	try {
 		await Promise.allSettled([await list.delete(), await TaskCard.deleteMany({ list: list._id })]);
 		res.json({ msg: 'Lista Eliminada' });
@@ -133,4 +139,4 @@ const udpateCardToList = async (req = request, res = response) => {
 	}
 };
 
-export { createNewList, getLists, editList, deleteList, addCardIdToList, udpateCardToList };
+export { createList, getLists, editList, deleteList, addCardIdToList, udpateCardToList };

@@ -1,11 +1,7 @@
-import mongoose from 'mongoose';
 import { request, response } from 'express';
 import Project from '../models/Project.js';
 import List from '../models/List.js';
-import Comment from '../models/Comment.js';
 import TaskCard from '../models/TaskCard.js';
-import User from '../models/User.js';
-import Label from '../models/Label.js';
 
 const createTaskCard = async (req = request, res = response) => {
 	const { list } = req.body;
@@ -28,7 +24,7 @@ const createTaskCard = async (req = request, res = response) => {
 	}
 };
 
-const updateCard = async (req = request, res = response) => {
+const updateTaskCard = async (req = request, res = response) => {
 	const { id } = req.params;
 	const task = await TaskCard.findById(id).select('nameCard imgUlr description');
 
@@ -44,7 +40,7 @@ const updateCard = async (req = request, res = response) => {
 	}
 };
 
-const deleteCard = async (req = request, res = response) => {
+const deleteTaskCard = async (req = request, res = response) => {
 	const { id } = req.params;
 	const card = await TaskCard.findById(id);
 
@@ -65,31 +61,15 @@ const getCardsToIds = async (req = request, res = response) => {
 	res.json(lists);
 };
 
-// Name Card
-// const editNameCard = async (req = request, res = response) => {
-// 	const { id } = req.params;
-// 	const  taskCard = await TaskCard.findById(id);
-
-// 	taskCard.
-// }
-
-// Comments
-
+// Comment
 const createComment = async (req = request, res = response) => {
-	const { taskCard } = req.body;
-	const existingTaskCard = await TaskCard.findById(taskCard);
+	const taskCard = await TaskCard.findById(req.body.taskCard);
 
-	if (!existingTaskCard) {
-		const error = new Error('No encontrado');
-		return res.status(404).json({ msg: error.message });
-	}
+	taskCard.comments.push(req.body);
 
 	try {
-		const commentStore = await Comment.create(req.body);
-		existingTaskCard.comments.push(commentStore._id);
-		await existingTaskCard.save();
-
-		res.json(commentStore);
+		await taskCard.save();
+		res.json(taskCard.comments[taskCard.comments.length - 1]);
 	} catch (error) {
 		console.log(error);
 	}
@@ -97,14 +77,20 @@ const createComment = async (req = request, res = response) => {
 
 const editComment = async (req = request, res = response) => {
 	const { id } = req.params;
-	const comment = await Comment.findById(id);
-	// const taskCard = await TaskCard.findById(comment.taskCard);
+	const savedTaskCard = await TaskCard.findOneAndUpdate(
+		{ _id: id, 'comments._id': req.body.id },
+		{
+			$set: { 'comments.$.comment': req.body.bodyComment },
+		},
+		{
+			returnDocument: 'after',
+		}
+	);
 
-	comment.comment = req.body.bodyComment || comment.comment;
+	const lastSavedComment = savedTaskCard.comments[savedTaskCard.comments.length - 1];
 
 	try {
-		const commentStore = await comment.save();
-		res.json(commentStore);
+		res.json(lastSavedComment);
 	} catch (error) {
 		console.log(error);
 	}
@@ -112,13 +98,13 @@ const editComment = async (req = request, res = response) => {
 
 const deleteComment = async (req = request, res = response) => {
 	const { id } = req.params;
-	const comment = await Comment.findById(id);
-	const taskCard = await TaskCard.findById(comment.taskCard).populate('comments');
+	const { idComment } = req.body;
+	const taskCard = await TaskCard.findById(id);
+
+	taskCard.comments.id(idComment).remove();
 
 	try {
-		taskCard.comments.pull(id);
-		await Promise.allSettled([await taskCard.save(), await comment.delete()]);
-
+		await taskCard.save();
 		res.json({ msg: 'TaskCard Eliminado' });
 	} catch (error) {
 		console.log(error);
@@ -126,7 +112,6 @@ const deleteComment = async (req = request, res = response) => {
 };
 
 // Members
-
 const findMemberToTaskCard = async (req = request, res = response) => {
 	// const { email, projectId } = req.body;
 	// const user = await User.findOne({ email }).select('_id name colorImg');
@@ -186,29 +171,29 @@ const assignMemberToTaskCard = async (req = request, res = response) => {
 };
 
 // Labels
-
 const createLabeltoTaskCard = async (req = request, res = response) => {
 	const taskCard = await TaskCard.findById(req.params.id);
-	const label = await Label.create(req.body);
-
-	taskCard.labels.push(label._id);
+	taskCard.labels.push(req.body);
 
 	try {
 		await taskCard.save();
-		res.json(label);
+
+		res.json(taskCard.labels[taskCard.labels.length - 1]);
 	} catch (error) {
 		console.log(error);
 	}
 };
 
 const deleteLabelToTaskCard = async (req = request, res = response) => {
-	const taskCard = await TaskCard.findById(req.params.id);
-	const label = await Label.findById(req.body.idLabel);
+	const { id } = req.params;
+	const { idLabel } = req.body;
+	const taskCard = await TaskCard.findById(id);
 
-	taskCard.labels.pull(req.body.idLabel);
+	taskCard.labels.id(idLabel).remove();
 
 	try {
-		await Promise.allSettled([await taskCard.save(), label.deleteOne()]);
+		await taskCard.save();
+
 		res.json({ msg: 'Label eliminado' });
 	} catch (error) {
 		console.log(error);
@@ -217,8 +202,8 @@ const deleteLabelToTaskCard = async (req = request, res = response) => {
 
 export {
 	createTaskCard,
-	updateCard,
-	deleteCard,
+	updateTaskCard,
+	deleteTaskCard,
 	getCardsToIds,
 	createComment,
 	editComment,
@@ -229,3 +214,8 @@ export {
 	createLabeltoTaskCard,
 	deleteLabelToTaskCard,
 };
+
+// if (!existingTaskCard) {
+// 	const error = new Error('No encontrado');
+// 	return res.status(404).json({ msg: error.message });
+// }

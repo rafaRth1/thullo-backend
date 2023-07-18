@@ -1,13 +1,13 @@
 import express from 'express';
 import checkAuth from '../middleware/checkAuth.js';
 import {
-	createComment,
 	createTaskCard,
-	deleteCard,
+	updateTaskCard,
+	deleteTaskCard,
+	createComment,
 	editComment,
 	deleteComment,
 	getCardsToIds,
-	updateCard,
 	findMemberInTaskcard,
 	assignMemberToTaskCard,
 	createLabeltoTaskCard,
@@ -18,12 +18,12 @@ import {
 const router = express.Router();
 
 router.post('/', createTaskCard);
-router.route('/:id').get(getCardsToIds).put(updateCard).delete(deleteCard);
-// router.post('/name-card/:id').put();
+router.route('/:id').get(getCardsToIds).put(updateTaskCard).delete(deleteTaskCard);
 
 // Comments
 router.post('/comment', createComment);
-router.route('/comment/:id').delete(deleteComment).put(editComment);
+router.put('/comment/:id', editComment);
+router.post('/comment-delete/:id', deleteComment);
 
 // Members
 router.get('/member/:idProject', findMemberInTaskcard);

@@ -1,4 +1,6 @@
-import mongoose, { mongo } from 'mongoose';
+import mongoose from 'mongoose';
+import { LabelSchema } from './Label.js';
+import { CommentSchema } from './Comment.js';
 
 const TaskCardSchema = mongoose.Schema({
 	nameCard: {
@@ -22,27 +24,14 @@ const TaskCardSchema = mongoose.Schema({
 		ref: 'List',
 	},
 
-	index: {
-		type: String,
-	},
+	labels: [LabelSchema],
 
-	comments: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Comment',
-		},
-	],
+	comments: [CommentSchema],
 
 	members: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'User',
-		},
-	],
-	labels: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Label',
 		},
 	],
 

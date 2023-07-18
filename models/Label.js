@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const LabelSchema = mongoose.Schema({
+export const LabelSchema = mongoose.Schema({
 	nameLabel: {
 		type: String,
 		required: true,
@@ -16,7 +16,7 @@ const LabelSchema = mongoose.Schema({
 		required: true,
 	},
 
-	color_light: {
+	colorLight: {
 		type: String,
 		required: true,
 	},
