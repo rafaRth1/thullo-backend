@@ -130,6 +130,7 @@ const checkToken = async (req = request, res = response) => {
 		res.status(404).json({ msg: error.message });
 	}
 };
+
 const newPassword = async (req = request, res = response) => {
 	const { token } = req.params;
 	const { password } = req.body;

@@ -15,7 +15,6 @@ const createTaskCard = async (req = request, res = response) => {
 	try {
 		const cardStore = await TaskCard.create(req.body);
 		existingList.taskCards.push(cardStore._id);
-
 		await existingList.save();
 
 		res.json(cardStore);
@@ -64,7 +63,6 @@ const getCardsToIds = async (req = request, res = response) => {
 // Comment
 const createComment = async (req = request, res = response) => {
 	const taskCard = await TaskCard.findById(req.body.taskCard);
-
 	taskCard.comments.push(req.body);
 
 	try {

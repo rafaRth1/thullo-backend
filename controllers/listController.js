@@ -52,8 +52,6 @@ const editList = async (req = request, res = response) => {
 		.select('-createdAt -updatedAt -__v')
 		.populate({ path: 'project', select: 'creator' });
 
-	//
-
 	if (!list) {
 		const error = new Error('No encontrado');
 		return res.status(404).json({ msg: error.message });

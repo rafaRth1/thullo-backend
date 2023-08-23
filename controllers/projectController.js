@@ -13,21 +13,9 @@ const getProjects = async (req = request, res = response) => {
 	res.json(projects);
 };
 
-const createNewProject = async (req = request, res = response) => {
-	const project = new Project(req.body);
-	project.creator = req.user._id;
-
-	try {
-		const projectStore = await project.save();
-		res.json(projectStore);
-	} catch (error) {
-		console.log(error);
-	}
-};
-
 const getProject = async (req = request, res = response) => {
 	const { id } = req.params;
-	const project = await Project.findById(id).select('-createdAt -updatedAt -lists').populate({
+	const project = await Project.findById(id).select('-createdAt -updatedAt -lists -__v').populate({
 		path: 'collaborators',
 		select: '_id name colorImg img',
 	});
@@ -46,6 +34,26 @@ const getProject = async (req = request, res = response) => {
 	}
 
 	res.json(project);
+};
+
+const createNewProject = async (req = request, res = response) => {
+	const project = new Project(req.body);
+	project.creator = req.user._id;
+
+	try {
+		const projectStore = await project.save();
+
+		res.json({
+			_id: projectStore._id,
+			name: projectStore.name,
+			name_img: projectStore.name_img,
+			type: projectStore.type,
+			collaborators: projectStore.collaborators,
+			creator: projectStore.creator,
+		});
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 const editProject = async (req = request, res = response) => {
@@ -69,7 +77,13 @@ const editProject = async (req = request, res = response) => {
 
 	try {
 		const projectStore = await project.save();
-		res.json(projectStore);
+
+		res.json({
+			_id: projectStore._id,
+			name: projectStore.name,
+			description: projectStore.description,
+			type: projectStore.type,
+		});
 	} catch (error) {
 		console.log(error);
 	}
@@ -151,6 +165,8 @@ const addCollaborator = async (req = request, res = response) => {
 	await project.populate('collaborators', 'name _id email colorImg');
 	await project.save();
 	res.json(project);
+
+	// res.json({ _id: project._id, name: project.name, email: project.email, colorImg: project.colorImg });
 };
 
 const deleteCollaborator = async (req = request, res = response) => {

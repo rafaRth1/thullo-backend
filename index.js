@@ -6,6 +6,8 @@ import userRoutes from './routes/userRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import listRoutes from './routes/listRoutes.js';
 import taskCardRoutes from './routes/taskCardRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
+
 dotenv.config();
 
 const app = express();
@@ -42,6 +44,7 @@ app.use('/user', userRoutes);
 app.use('/projects', projectRoutes);
 app.use('/list', listRoutes);
 app.use('/taskCard', taskCardRoutes);
+app.use('/search', searchRoutes);
 
 app.get('*', (req, res) => {
 	res.sendFile(__dirname + '/public/index.html');
