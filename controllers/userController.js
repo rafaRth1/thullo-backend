@@ -65,7 +65,7 @@ const authenticateUser = async (req = request, res = response) => {
 			token: generateJWT(user._id),
 		});
 	} else {
-		const error = new Error('Password is incorrect');
+		const error = new Error('Invalid Email or Password');
 		res.status(403).json({ msg: error.message });
 	}
 };

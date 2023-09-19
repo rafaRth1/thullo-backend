@@ -8,8 +8,9 @@ const getProjects = async (req = request, res = response) => {
 	const projects = await Project.find({
 		$or: [{ collaborators: { $in: req.user } }, { creator: { $in: req.user } }],
 	})
-		.select('-createdAt -updatedAt -__v')
+		.select('-createdAt -updatedAt -__v -lists')
 		.populate({ path: 'collaborators', select: '_id name email colorImg img' });
+
 	res.json(projects);
 };
 
@@ -162,11 +163,8 @@ const addCollaborator = async (req = request, res = response) => {
 	}
 
 	project.collaborators.push(user._id);
-	await project.populate('collaborators', 'name _id email colorImg');
 	await project.save();
-	res.json(project);
-
-	// res.json({ _id: project._id, name: project.name, email: project.email, colorImg: project.colorImg });
+	res.json(user);
 };
 
 const deleteCollaborator = async (req = request, res = response) => {

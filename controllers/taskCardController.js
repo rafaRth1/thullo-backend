@@ -27,8 +27,13 @@ const updateTaskCard = async (req = request, res = response) => {
 	const { id } = req.params;
 	const task = await TaskCard.findById(id).select('nameCard imgUlr description');
 
+	if (!task) {
+		const error = new Error('TaskCard no existe');
+		return res.status(403).json({ msg: error.message });
+	}
+
 	task.nameCard = req.body.nameCard || task.nameCard;
-	task.imgUlr = req.body.imgUlr;
+	task.imgUlr = req.body.imgUlr || task.imgUlr;
 	task.description = req.body.description || task.description;
 
 	try {
@@ -36,6 +41,7 @@ const updateTaskCard = async (req = request, res = response) => {
 		res.json(taskCardStore);
 	} catch (error) {
 		console.log(error);
+		res.status(403).json({ msg: 'Error' });
 	}
 };
 
@@ -63,11 +69,13 @@ const getCardsToIds = async (req = request, res = response) => {
 // Comment
 const createComment = async (req = request, res = response) => {
 	const taskCard = await TaskCard.findById(req.body.taskCard);
-	taskCard.comments.push(req.body);
+	const comment = taskCard.comments.create(req.body);
+
+	taskCard.comments.push(comment);
 
 	try {
 		await taskCard.save();
-		res.json(taskCard.comments[taskCard.comments.length - 1]);
+		res.json(comment);
 	} catch (error) {
 		console.log(error);
 	}
@@ -76,7 +84,7 @@ const createComment = async (req = request, res = response) => {
 const editComment = async (req = request, res = response) => {
 	const { id } = req.params;
 	const savedTaskCard = await TaskCard.findOneAndUpdate(
-		{ _id: id, 'comments._id': req.body.id },
+		{ _id: id, 'comments._id': req.body.idComment },
 		{
 			$set: { 'comments.$.comment': req.body.bodyComment },
 		},
@@ -85,7 +93,9 @@ const editComment = async (req = request, res = response) => {
 		}
 	);
 
-	const lastSavedComment = savedTaskCard.comments[savedTaskCard.comments.length - 1];
+	const lastSavedComment = savedTaskCard.comments.find(
+		(comment) => comment._id.toString() === req.body.idComment.toString()
+	);
 
 	try {
 		res.json(lastSavedComment);
@@ -99,7 +109,7 @@ const deleteComment = async (req = request, res = response) => {
 	const { idComment } = req.body;
 	const taskCard = await TaskCard.findById(id);
 
-	taskCard.comments.id(idComment).remove();
+	taskCard.comments.pull({ _id: idComment });
 
 	try {
 		await taskCard.save();
@@ -149,9 +159,10 @@ const findMemberInTaskcard = async (req = request, res = response) => {
 
 const assignMemberToTaskCard = async (req = request, res = response) => {
 	const { id } = req.params;
+	const members = req.body.members;
 	const taskCard = await TaskCard.findById(id);
 
-	req.body.members.map((member) => {
+	members.map((member) => {
 		if (taskCard.members.includes(member._id)) {
 			return;
 		} else {
@@ -171,12 +182,13 @@ const assignMemberToTaskCard = async (req = request, res = response) => {
 // Labels
 const createLabeltoTaskCard = async (req = request, res = response) => {
 	const taskCard = await TaskCard.findById(req.params.id);
-	taskCard.labels.push(req.body);
+	const label = taskCard.labels.create(req.body);
+
+	taskCard.labels.push(label);
 
 	try {
 		await taskCard.save();
-
-		res.json(taskCard.labels[taskCard.labels.length - 1]);
+		res.json(label);
 	} catch (error) {
 		console.log(error);
 	}
@@ -191,7 +203,6 @@ const deleteLabelToTaskCard = async (req = request, res = response) => {
 
 	try {
 		await taskCard.save();
-
 		res.json({ msg: 'Label eliminado' });
 	} catch (error) {
 		console.log(error);

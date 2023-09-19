@@ -18,6 +18,23 @@ const getLists = async (req = request, res = response) => {
 	res.json(lists);
 };
 
+const getListsV2 = async (req = request, res = response) => {
+	const { idProject } = req.params;
+
+	const lists = await List.find()
+		.where('project')
+		.equals(idProject)
+		.select('-createdAt -updatedAt -__v -project');
+
+	// .populate({ path: 'taskCards', populate: { path: 'comments' } })
+	// .populate({ path: 'taskCards', populate: { path: 'members', select: '_id name colorImg img' } })
+	// .populate({ path: 'taskCards', populate: { path: 'labels' } });
+
+	console.log(lists);
+
+	// res.json(lists);
+};
+
 const createList = async (req = request, res = response) => {
 	const { project } = req.body;
 	const existingProject = await Project.findById(project);
@@ -118,23 +135,25 @@ const addCardIdToList = async (req = request, res = response) => {
 	}
 };
 
-const udpateCardToList = async (req = request, res = response) => {
-	const { taskCards, _idTaskCard } = req.body;
-	const list = await List.findById(req.params.id);
-	const card = await TaskCard.findById(_idTaskCard);
+const udpateCardOnDrag = async (req = request, res = response) => {
+	const { items, action, idListSource, idListDestination, idCard } = req.body;
 
-	const newTaskCards = taskCards.map((items) => {
-		return new mongoose.Types.ObjectId(items._id);
-	});
+	if (action === 'REODER_POS') {
+		const list = await List.findById(req.params.id);
+		list.taskCards = items;
+		await list.save();
+	} else {
+		const listSource = await List.findById(idListSource);
+		const listDest = await List.findById(idListDestination);
+		const card = await TaskCard.findById(idCard);
 
-	card.list = list._id;
-	list.taskCards = newTaskCards;
+		listSource.taskCards.pull(idCard);
+		listDest.taskCards.push(idCard);
 
-	try {
-		await Promise.allSettled([await list.save(), await card.save()]);
-	} catch (error) {
-		console.log(error);
+		card.list = idListDestination;
+
+		await Promise.allSettled([await listSource.save(), await listDest.save(), await card.save()]);
 	}
 };
 
-export { createList, getLists, editList, deleteList, addCardIdToList, udpateCardToList };
+export { createList, getLists, getListsV2, editList, deleteList, addCardIdToList, udpateCardOnDrag };
