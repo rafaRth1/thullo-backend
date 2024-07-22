@@ -46,7 +46,7 @@ const createNewProject = async (req = request, res = response) => {
 
 		res.json({
 			_id: projectStore._id,
-			name: projectStore.name,
+			name_board: projectStore.name,
 			name_img: projectStore.name_img,
 			type: projectStore.type,
 			collaborators: projectStore.collaborators,

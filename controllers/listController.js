@@ -21,10 +21,7 @@ const getLists = async (req = request, res = response) => {
 const getListsV2 = async (req = request, res = response) => {
 	const { idProject } = req.params;
 
-	const lists = await List.find()
-		.where('project')
-		.equals(idProject)
-		.select('-createdAt -updatedAt -__v -project');
+	const lists = await List.find().where('project').equals(idProject).select('-createdAt -updatedAt -__v -project');
 
 	// .populate({ path: 'taskCards', populate: { path: 'comments' } })
 	// .populate({ path: 'taskCards', populate: { path: 'members', select: '_id name colorImg img' } })
@@ -57,6 +54,7 @@ const createList = async (req = request, res = response) => {
 			name: list.name,
 			taskCards: list.taskCards,
 			project: list.project,
+			color_header: list.color_header,
 		});
 	} catch (error) {
 		console.log(error);
@@ -65,9 +63,7 @@ const createList = async (req = request, res = response) => {
 
 const editList = async (req = request, res = response) => {
 	const { id } = req.params;
-	const list = await List.findById(id)
-		.select('-createdAt -updatedAt -__v')
-		.populate({ path: 'project', select: 'creator' });
+	const list = await List.findById(id).select('-createdAt -updatedAt -__v').populate({ path: 'project', select: 'creator' });
 
 	if (!list) {
 		const error = new Error('No encontrado');

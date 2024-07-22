@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const ProjectSchema = mongoose.Schema(
 	{
-		name: {
+		name_board: {
 			type: String,
 			require: true,
 			trim: true,

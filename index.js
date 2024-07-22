@@ -16,12 +16,7 @@ app.use(express.json());
 
 connectDB();
 
-// Config Cors
-const whitelist = [
-	process.env.FRONTEND_URL_PRD,
-	process.env.FRONTEND_URL_DEV,
-	process.env.FRONTEND_URL_PRD_TEST,
-];
+const whitelist = [process.env.FRONTEND_URL_PRD, process.env.FRONTEND_URL_DEV, process.env.FRONTEND_URL_PRD_TEST];
 
 const corsOptions = {
 	origin: function (origin, callback) {

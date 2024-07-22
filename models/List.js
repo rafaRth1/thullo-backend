@@ -8,6 +8,15 @@ const ListSChema = mongoose.Schema(
 			trim: true,
 		},
 
+		color_header: {
+			primary_color: {
+				type: String,
+			},
+			secondary_color: {
+				type: String,
+			},
+		},
+
 		taskCards: [
 			{
 				type: mongoose.Schema.Types.ObjectId,
